@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Photo Gallery</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v=1)}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Photo Gallery</a>
+    <a th:href="@{/upload}" class="btn btn-primary btn-sm">+ Upload Photo</a>
+</nav>
+
+<div class="page">
+
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Gallery</h1>
+            <p class="page-subtitle" th:if="${totalItems != null}"
+               th:text="${totalItems + ' photo' + (totalItems != 1 ? 's' : '')}"></p>
+        </div>
+    </div>
+
+    <form th:action="@{/}" method="get" class="search-row">
+        <div class="search-wrap">
+            <span class="search-icon">&#128269;</span>
+            <input type="text" name="keyword" th:value="${keyword}" placeholder="Search by title or description...">
+        </div>
+        <button type="submit" class="btn btn-secondary">Search</button>
+        <a th:href="@{/}" class="btn-clear-search" th:if="${keyword != null and !keyword.isEmpty()}">Clear</a>
+    </form>
+
+    <div th:if="${photos.empty}" class="empty-state">
+        <div class="empty-state-icon">&#128247;</div>
+        <p class="empty-state-title" th:if="${keyword != null and !keyword.isEmpty()}">No photos match your search</p>
+        <p class="empty-state-title" th:if="${keyword == null or keyword.isEmpty()}">No photos yet</p>
+        <p class="empty-state-text" th:if="${keyword != null and !keyword.isEmpty()}">Try a different keyword or clear the search.</p>
+        <p class="empty-state-text" th:if="${keyword == null or keyword.isEmpty()}">Upload your first photo to get started.</p>
+        <a th:href="@{/upload}" class="btn btn-primary" th:if="${keyword == null or keyword.isEmpty()}">+ Upload Photo</a>
+    </div>
+
+    <div class="photo-grid" th:if="${!photos.empty}">
+        <div th:each="photo : ${photos}" class="photo-card">
+            <a th:href="@{/view/{id}(id=${photo.id})}" class="photo-card-img-wrap">
+                <img th:src="${photo.imageUrl}" th:alt="${photo.title}" class="photo-card-img" loading="lazy">
+            </a>
+            <div class="photo-card-body">
+                <span class="photo-card-title" th:text="${photo.title}">Title</span>
+                <span class="photo-card-date" th:text="${#temporals.format(photo.createdAt, 'MMM d, yyyy')}">Date</span>
+                <div class="photo-card-actions">
+                    <a th:href="@{/edit/{id}(id=${photo.id})}" class="btn btn-ghost btn-sm">Edit</a>
+                    <form th:action="@{/delete/{id}(id=${photo.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Delete this photo?')">
+                        <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger)">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pagination" th:if="${totalPages > 1}">
+        <a th:href="@{/(keyword=${keyword}, page=${currentPage - 1})}"
+           th:classappend="${currentPage == 0} ? 'pg-disabled'">&laquo;</a>
+
+        <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+            <a th:href="@{/(keyword=${keyword}, page=${i})}"
+               th:text="${i + 1}"
+               th:classappend="${currentPage == i} ? 'pg-active'">1</a>
+        </th:block>
+
+        <a th:href="@{/(keyword=${keyword}, page=${currentPage + 1})}"
+           th:classappend="${currentPage == totalPages - 1} ? 'pg-disabled'">&raquo;</a>
+    </div>
+
+</div>
+
+</body>
+</html>

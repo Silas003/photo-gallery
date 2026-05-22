@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload Photo</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v=1)}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Photo Gallery</a>
+</nav>
+
+<div class="page-sm">
+
+    <a th:href="@{/}" class="back-link">&larr; Back to gallery</a>
+
+    <div class="page-header">
+        <h1 class="page-title">Upload Photo</h1>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/upload}" th:object="${photoRequest}" method="post"
+                  enctype="multipart/form-data">
+
+                <div class="form-group">
+                    <label class="form-label">Image</label>
+                    <div class="upload-zone" id="uploadZone">
+                        <div class="upload-zone-content" id="uploadPlaceholder">
+                            <div class="upload-icon">&#128444;</div>
+                            <p class="upload-hint">Click to select an image</p>
+                            <p class="form-hint">JPG, PNG, GIF, WEBP &mdash; max 10 MB</p>
+                        </div>
+                        <img id="imagePreview" class="upload-preview" alt="Preview" style="display:none">
+                        <input type="file" id="imageInput" name="image" accept="image/*"
+                               class="upload-file-input" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="title">Title</label>
+                    <input id="title" type="text" class="form-control" th:field="*{title}"
+                           placeholder="Give your photo a title" required>
+                    <p th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="form-error"></p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea id="description" class="form-control" th:field="*{description}" rows="4"
+                              placeholder="Optional description..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Upload Photo</button>
+                    <a th:href="@{/}" class="btn btn-secondary">Cancel</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const input = document.getElementById('imageInput');
+    const preview = document.getElementById('imagePreview');
+    const placeholder = document.getElementById('uploadPlaceholder');
+
+    input.addEventListener('change', () => {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    });
+</script>
+
+</body>
+</html>

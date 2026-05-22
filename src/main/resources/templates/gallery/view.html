@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${photo.title}">Photo</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v=1)}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a th:href="@{/}" class="navbar-brand">Photo Gallery</a>
+    <a th:href="@{/upload}" class="btn btn-primary btn-sm">+ Upload Photo</a>
+</nav>
+
+<div class="page-sm">
+
+    <a th:href="@{/}" class="back-link">&larr; Back to gallery</a>
+
+    <div class="photo-view-img-wrap">
+        <img th:src="${photo.imageUrl}" th:alt="${photo.title}" class="photo-view-img">
+    </div>
+
+    <div class="card" style="margin-top: 20px">
+        <div class="card-body">
+
+            <h1 class="photo-view-title" th:text="${photo.title}">Title</h1>
+
+            <div class="photo-meta">
+                <span th:text="'Uploaded ' + ${#temporals.format(photo.createdAt, 'MMM d, yyyy')}"></span>
+                <span th:if="${photo.updatedAt != null and photo.updatedAt != photo.createdAt}"
+                      th:text="'Updated ' + ${#temporals.format(photo.updatedAt, 'MMM d, yyyy')}"></span>
+            </div>
+
+            <p class="photo-view-description"
+               th:if="${photo.description != null and !photo.description.isEmpty()}"
+               th:text="${photo.description}"></p>
+
+            <p class="photo-view-description" style="color:var(--gray-400); font-style:italic"
+               th:if="${photo.description == null or photo.description.isEmpty()}">No description provided.</p>
+
+            <div class="photo-detail-actions">
+                <a th:href="@{/edit/{id}(id=${photo.id})}" class="btn btn-secondary">Edit</a>
+                <form th:action="@{/delete/{id}(id=${photo.id})}" method="post" style="display:inline"
+                      onsubmit="return confirm('Delete this photo permanently?')">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
