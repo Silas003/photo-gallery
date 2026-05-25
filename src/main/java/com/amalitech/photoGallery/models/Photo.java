@@ -24,7 +24,7 @@ public class Photo {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false, length = 1024)
+    @Column(nullable = false)
     private String s3Key;
 
     @Transient

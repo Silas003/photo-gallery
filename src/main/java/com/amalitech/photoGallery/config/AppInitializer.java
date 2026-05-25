@@ -6,7 +6,8 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
 
 public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
-    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024; // 10 MB
+    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024;    // 10 MB
+    private static final int  MEM_THRESHOLD  = 1024 * 1024;         // 1 MB — files below this stay in memory
 
     @Override
     protected Class<?>[] getRootConfigClasses() {
@@ -26,6 +27,6 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
     @Override
     protected void customizeRegistration(ServletRegistration.Dynamic registration) {
         registration.setMultipartConfig(
-                new MultipartConfigElement(null, MAX_FILE_SIZE, MAX_FILE_SIZE, 0));
+                new MultipartConfigElement(null, MAX_FILE_SIZE, MAX_FILE_SIZE, MEM_THRESHOLD));
     }
 }

@@ -40,7 +40,6 @@ public class PhotoService implements PhotoServiceInterface {
     }
 
     @Override
-    @Transactional
     public Photo uploadPhoto(PhotoUploadRequest request) {
         MultipartFile file = request.getImage();
         if (file == null || file.isEmpty()) {
@@ -48,7 +47,8 @@ public class PhotoService implements PhotoServiceInterface {
         }
 
         String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "image";
-        String s3Key = UUID.randomUUID() + "-" + originalName;
+        String extension = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf('.')) : "";
+        String s3Key = UUID.randomUUID() + extension;
 
         try {
             s3Client.putObject(
@@ -56,18 +56,24 @@ public class PhotoService implements PhotoServiceInterface {
                             .bucket(bucketName)
                             .key(s3Key)
                             .contentType(file.getContentType())
+                            .contentLength(file.getSize())
+                            .cacheControl("public, max-age=31536000, immutable")
                             .build(),
-                    RequestBody.fromBytes(file.getBytes())
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
         } catch (IOException e) {
             throw new PhotoUploadException("Failed to read image file", e);
         }
 
-        Photo photo = new Photo();
-        photo.setTitle(request.getTitle());
-        photo.setDescription(request.getDescription());
-        photo.setS3Key(s3Key);
+        return savePhoto(request.getTitle(), request.getDescription(), s3Key);
+    }
 
+    @Transactional
+    protected Photo savePhoto(String title, String description, String s3Key) {
+        Photo photo = new Photo();
+        photo.setTitle(title);
+        photo.setDescription(description);
+        photo.setS3Key(s3Key);
         return photoRepository.save(photo);
     }
 
