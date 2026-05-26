@@ -5,8 +5,9 @@ import com.amalitech.photoGallery.dto.request.PhotoUploadRequest;
 import com.amalitech.photoGallery.models.Photo;
 import com.amalitech.photoGallery.service.interfaces.PhotoServiceInterface;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
@@ -15,12 +16,22 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@AllArgsConstructor
 @Controller
 @RequestMapping("/")
 public class PhotoController {
 
     private final PhotoServiceInterface photoService;
+    private final String cloudfrontDomain;
+
+    public PhotoController(PhotoServiceInterface photoService,
+                           @Value("${aws.cloudfront.domain}") String cloudfrontDomain) {
+        this.photoService = photoService;
+        this.cloudfrontDomain = cloudfrontDomain;
+    }
+
+    private String cfRedirect(String path) {
+        return "redirect:https://" + cloudfrontDomain + path;
+    }
 
     @GetMapping
     public String listPhotos(
@@ -50,7 +61,8 @@ public class PhotoController {
     public String uploadPhoto(
             @Valid @ModelAttribute("photoRequest") PhotoUploadRequest request,
             BindingResult bindingResult,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
             return "gallery/upload";
@@ -69,7 +81,8 @@ public class PhotoController {
             return "gallery/upload";
         }
 
-        return "redirect:/";
+        redirectAttributes.addFlashAttribute("successMessage", "Photo uploaded successfully!");
+        return cfRedirect("/");
     }
 
     @GetMapping("/view/{id}")
@@ -94,7 +107,8 @@ public class PhotoController {
             @PathVariable("id") Long id,
             @Valid @ModelAttribute("editRequest") PhotoEditRequest request,
             BindingResult bindingResult,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
             Photo photo = photoService.getPhotoById(id);
@@ -103,12 +117,14 @@ public class PhotoController {
         }
 
         photoService.updatePhoto(id, request);
-        return "redirect:/view/" + id;
+        redirectAttributes.addFlashAttribute("successMessage", "Changes saved.");
+        return cfRedirect("/view/" + id);
     }
 
     @PostMapping("/delete/{id}")
-    public String deletePhoto(@PathVariable("id") Long id) {
+    public String deletePhoto(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         photoService.deletePhoto(id);
-        return "redirect:/";
+        redirectAttributes.addFlashAttribute("successMessage", "Photo deleted.");
+        return cfRedirect("/");
     }
 }

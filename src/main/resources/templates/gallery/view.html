@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${photo.title}">Photo</title>
-    <link rel="stylesheet" th:href="@{/css/style.css(v=1)}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v=2)}">
 </head>
 <body>
 
@@ -12,6 +12,8 @@
     <a th:href="@{/}" class="navbar-brand">Photo Gallery</a>
     <a th:href="@{/upload}" class="btn btn-primary btn-sm">+ Upload Photo</a>
 </nav>
+
+<div class="toast-container" id="toastContainer"></div>
 
 <div class="page-sm">
 
@@ -41,16 +43,57 @@
 
             <div class="photo-detail-actions">
                 <a th:href="@{/edit/{id}(id=${photo.id})}" class="btn btn-secondary">Edit</a>
-                <form th:action="@{/delete/{id}(id=${photo.id})}" method="post" style="display:inline"
-                      onsubmit="return confirm('Delete this photo permanently?')">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
+                <button type="button" class="btn btn-danger"
+                        th:data-action="@{/delete/{id}(id=${photo.id})}"
+                        th:data-title="${photo.title}"
+                        onclick="openDeleteModal(this)">Delete</button>
             </div>
 
         </div>
     </div>
 
 </div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+        <p class="modal-title">Delete Photo?</p>
+        <p class="modal-text" id="deleteModalText">This will permanently remove the photo and cannot be undone.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+            <form id="deleteForm" method="post">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    var successMessage = /*[[${successMessage}]]*/ null;
+
+    function showToast(msg, type) {
+        var c = document.getElementById('toastContainer');
+        var t = document.createElement('div');
+        t.className = 'toast toast-' + (type || 'success');
+        t.textContent = msg;
+        c.appendChild(t);
+        setTimeout(function() {
+            t.style.animation = 'toast-out .3s ease forwards';
+            setTimeout(function() { t.remove(); }, 300);
+        }, 3000);
+    }
+    if (successMessage) showToast(successMessage);
+
+    var overlay = document.getElementById('deleteModal');
+    function openDeleteModal(btn) {
+        document.getElementById('deleteModalText').textContent =
+            '"' + btn.dataset.title + '" will be permanently deleted. This cannot be undone.';
+        document.getElementById('deleteForm').action = btn.dataset.action;
+        overlay.classList.add('open');
+    }
+    function closeDeleteModal() { overlay.classList.remove('open'); }
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) closeDeleteModal(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDeleteModal(); });
+</script>
 
 </body>
 </html>
