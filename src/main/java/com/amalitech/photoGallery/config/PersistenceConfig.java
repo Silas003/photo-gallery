@@ -37,6 +37,7 @@ public class PersistenceConfig {
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
+        config.setDriverClassName("org.postgresql.Driver");
         config.setUsername(username);
         config.setPassword(password);
         config.setMaximumPoolSize(10);
