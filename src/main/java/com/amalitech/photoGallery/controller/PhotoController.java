@@ -38,16 +38,22 @@ public class PhotoController {
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "12") int size,
+            @RequestParam(name = "sort", defaultValue = "newest") String sort,
             Model model) {
 
+        Sort order = "oldest".equals(sort) ? Sort.by("createdAt").ascending()
+                   : "alpha".equals(sort)  ? Sort.by("title").ascending()
+                   :                         Sort.by("createdAt").descending();
+
         Page<Photo> photoPage = photoService.getPhotos(
-                keyword, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+                keyword, PageRequest.of(page, size, order));
 
         model.addAttribute("photos", photoPage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", photoPage.getTotalPages());
         model.addAttribute("totalItems", photoPage.getTotalElements());
         model.addAttribute("keyword", keyword);
+        model.addAttribute("sort", sort);
         return "gallery/list";
     }
 

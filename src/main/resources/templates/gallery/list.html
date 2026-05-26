@@ -4,80 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Photo Gallery</title>
-    <link rel="stylesheet" th:href="@{/css/style.css(v=2)}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v=3)}">
 </head>
 <body>
 
 <nav class="navbar">
     <a th:href="@{/}" class="navbar-brand">Photo Gallery</a>
-    <a th:href="@{/upload}" class="btn btn-primary btn-sm">+ Upload Photo</a>
 </nav>
 
 <div class="toast-container" id="toastContainer"></div>
 
-<div class="page">
-
-    <div class="page-header">
+<!-- Gallery header strip -->
+<div class="gallery-header">
+    <div class="gallery-header-inner">
         <div>
-            <h1 class="page-title">Gallery</h1>
-            <p class="page-subtitle" th:if="${totalItems != null}"
+            <h1 class="gallery-header-title">My Gallery</h1>
+            <p class="gallery-header-count" th:if="${totalItems != null}"
                th:text="${totalItems + ' photo' + (totalItems != 1 ? 's' : '')}"></p>
         </div>
+        <a th:href="@{/upload}" class="gallery-header-upload">+ Upload Photo</a>
+    </div>
+</div>
+
+<div class="page">
+
+    <!-- Toolbar: search · sort · view toggle -->
+    <div class="gallery-toolbar">
+
+        <form th:action="@{/}" method="get" class="gallery-search-form" id="searchForm">
+            <input type="hidden" name="sort" th:value="${sort}">
+            <div class="gallery-search-wrap">
+                <span class="gallery-search-icon">&#128269;</span>
+                <input type="text" name="keyword" id="searchInput"
+                       th:value="${keyword}" placeholder="Search photos…" autocomplete="off">
+            </div>
+        </form>
+
+        <!-- Sort pills -->
+        <div class="pill-group">
+            <a th:href="@{/(keyword=${keyword}, sort='newest')}"
+               class="pill-btn" th:classappend="${sort == 'newest'} ? ' active'">Newest</a>
+            <a th:href="@{/(keyword=${keyword}, sort='oldest')}"
+               class="pill-btn" th:classappend="${sort == 'oldest'} ? ' active'">Oldest</a>
+            <a th:href="@{/(keyword=${keyword}, sort='alpha')}"
+               class="pill-btn" th:classappend="${sort == 'alpha'} ? ' active'">A–Z</a>
+        </div>
+
+        <!-- View toggle -->
+        <div class="pill-group">
+            <button type="button" class="pill-btn" id="btnGrid"
+                    onclick="setView('grid')" title="Grid view">&#9783;</button>
+            <button type="button" class="pill-btn" id="btnList"
+                    onclick="setView('list')" title="List view">&#8801;</button>
+        </div>
+
+        <a th:href="@{/(sort=${sort})}" class="btn btn-ghost btn-sm"
+           th:if="${keyword != null and !keyword.isEmpty()}">&#x2715; Clear</a>
+
     </div>
 
-    <form th:action="@{/}" method="get" class="search-row">
-        <div class="search-wrap">
-            <span class="search-icon">&#128269;</span>
-            <input type="text" name="keyword" th:value="${keyword}" placeholder="Search by title or description...">
-        </div>
-        <button type="submit" class="btn btn-secondary">Search</button>
-        <a th:href="@{/}" class="btn-clear-search" th:if="${keyword != null and !keyword.isEmpty()}">Clear</a>
-    </form>
-
+    <!-- Empty state -->
     <div th:if="${photos.empty}" class="empty-state">
         <div class="empty-state-icon">&#128247;</div>
-        <p class="empty-state-title" th:if="${keyword != null and !keyword.isEmpty()}">No photos match your search</p>
-        <p class="empty-state-title" th:if="${keyword == null or keyword.isEmpty()}">No photos yet</p>
-        <p class="empty-state-text" th:if="${keyword != null and !keyword.isEmpty()}">Try a different keyword or clear the search.</p>
-        <p class="empty-state-text" th:if="${keyword == null or keyword.isEmpty()}">Upload your first photo to get started.</p>
-        <a th:href="@{/upload}" class="btn btn-primary" th:if="${keyword == null or keyword.isEmpty()}">+ Upload Photo</a>
+        <p class="empty-state-title"
+           th:if="${keyword != null and !keyword.isEmpty()}"
+           th:text="'No results for &quot;' + ${keyword} + '&quot;'"></p>
+        <p class="empty-state-title"
+           th:if="${keyword == null or keyword.isEmpty()}">No photos yet</p>
+        <p class="empty-state-text"
+           th:if="${keyword != null and !keyword.isEmpty()}">Try a different keyword or clear the search.</p>
+        <p class="empty-state-text"
+           th:if="${keyword == null or keyword.isEmpty()}">Upload your first photo to get started.</p>
+        <a th:href="@{/upload}" class="btn btn-primary"
+           th:if="${keyword == null or keyword.isEmpty()}">+ Upload Photo</a>
     </div>
 
-    <div class="photo-grid" th:if="${!photos.empty}">
+    <!-- Photo grid -->
+    <div class="photo-grid" id="photoGrid" th:if="${!photos.empty}">
         <div th:each="photo : ${photos}" class="photo-card">
-            <a th:href="@{/view/{id}(id=${photo.id})}" class="photo-card-img-wrap">
-                <img th:src="${photo.imageUrl}" th:alt="${photo.title}" class="photo-card-img" loading="lazy">
+
+            <!-- Image (fills card via position:absolute) -->
+            <a th:href="@{/view/{id}(id=${photo.id})}" class="photo-card-thumb">
+                <img th:src="${photo.imageUrl}" th:alt="${photo.title}"
+                     class="photo-card-img" loading="lazy">
             </a>
-            <div class="photo-card-body">
-                <span class="photo-card-title" th:text="${photo.title}">Title</span>
-                <span class="photo-card-date" th:text="${#temporals.format(photo.createdAt, 'MMM d, yyyy')}">Date</span>
-                <div class="photo-card-actions">
-                    <a th:href="@{/edit/{id}(id=${photo.id})}" class="btn btn-ghost btn-sm">Edit</a>
-                    <button type="button" class="btn btn-ghost btn-sm" style="color:var(--danger)"
-                            th:data-action="@{/delete/{id}(id=${photo.id})}"
-                            th:data-title="${photo.title}"
-                            onclick="openDeleteModal(this)">Delete</button>
+
+            <!-- Gradient overlay: title (links to view) + date + actions -->
+            <div class="photo-card-overlay">
+                <a th:href="@{/view/{id}(id=${photo.id})}"
+                   class="photo-card-title"
+                   th:text="${photo.title}">Title</a>
+                <div class="photo-card-meta">
+                    <span class="photo-card-date"
+                          th:text="${#temporals.format(photo.createdAt, 'MMM d, yyyy')}">Date</span>
+                    <div class="photo-card-actions">
+                        <a th:href="@{/edit/{id}(id=${photo.id})}" class="card-action-btn">Edit</a>
+                        <button type="button" class="card-action-btn card-action-danger"
+                                th:data-action="@{/delete/{id}(id=${photo.id})}"
+                                th:data-title="${photo.title}"
+                                onclick="openDeleteModal(this)">Delete</button>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
 
+    <!-- Pagination -->
     <div class="pagination" th:if="${totalPages > 1}">
-        <a th:href="@{/(keyword=${keyword}, page=${currentPage - 1})}"
+        <a th:href="@{/(keyword=${keyword}, sort=${sort}, page=${currentPage - 1})}"
            th:classappend="${currentPage == 0} ? 'pg-disabled'">&laquo;</a>
 
         <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-            <a th:href="@{/(keyword=${keyword}, page=${i})}"
+            <a th:href="@{/(keyword=${keyword}, sort=${sort}, page=${i})}"
                th:text="${i + 1}"
                th:classappend="${currentPage == i} ? 'pg-active'">1</a>
         </th:block>
 
-        <a th:href="@{/(keyword=${keyword}, page=${currentPage + 1})}"
+        <a th:href="@{/(keyword=${keyword}, sort=${sort}, page=${currentPage + 1})}"
            th:classappend="${currentPage == totalPages - 1} ? 'pg-disabled'">&raquo;</a>
     </div>
 
 </div>
 
+<!-- Delete confirmation modal -->
 <div class="modal-overlay" id="deleteModal">
     <div class="modal">
         <p class="modal-title">Delete Photo?</p>
@@ -92,11 +142,12 @@
 </div>
 
 <script th:inline="javascript">
-    const successMessage = /*[[${successMessage}]]*/ null;
+    var successMessage = /*[[${successMessage}]]*/ null;
 
+    /* ── Toast ── */
     function showToast(msg, type) {
-        const c = document.getElementById('toastContainer');
-        const t = document.createElement('div');
+        var c = document.getElementById('toastContainer');
+        var t = document.createElement('div');
         t.className = 'toast toast-' + (type || 'success');
         t.textContent = msg;
         c.appendChild(t);
@@ -107,10 +158,36 @@
     }
     if (successMessage) showToast(successMessage);
 
-    const overlay = document.getElementById('deleteModal');
+    /* ── View toggle ── */
+    var grid    = document.getElementById('photoGrid');
+    var btnGrid = document.getElementById('btnGrid');
+    var btnList = document.getElementById('btnList');
+
+    function setView(v) {
+        if (!grid) return;
+        var isList = (v === 'list');
+        grid.classList.toggle('list-view', isList);
+        btnList.classList.toggle('active', isList);
+        btnGrid.classList.toggle('active', !isList);
+        try { localStorage.setItem('galleryView', v); } catch(e) {}
+    }
+
+    // Restore saved preference
+    try {
+        var saved = localStorage.getItem('galleryView');
+        setView(saved === 'list' ? 'list' : 'grid');
+    } catch(e) { setView('grid'); }
+
+    /* ── Search: submit on Enter (hidden sort input keeps sort param) ── */
+    document.getElementById('searchInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('searchForm').submit(); }
+    });
+
+    /* ── Delete modal ── */
+    var overlay = document.getElementById('deleteModal');
     function openDeleteModal(btn) {
         document.getElementById('deleteModalText').textContent =
-            '“' + btn.dataset.title + '” will be permanently deleted. This cannot be undone.';
+            '"' + btn.dataset.title + '" will be permanently deleted. This cannot be undone.';
         document.getElementById('deleteForm').action = btn.dataset.action;
         overlay.classList.add('open');
     }
