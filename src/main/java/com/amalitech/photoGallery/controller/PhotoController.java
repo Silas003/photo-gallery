@@ -5,7 +5,6 @@ import com.amalitech.photoGallery.dto.request.PhotoUploadRequest;
 import com.amalitech.photoGallery.models.Photo;
 import com.amalitech.photoGallery.service.interfaces.PhotoServiceInterface;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.data.domain.PageRequest;
@@ -21,16 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class PhotoController {
 
     private final PhotoServiceInterface photoService;
-    private final String cloudfrontDomain;
 
-    public PhotoController(PhotoServiceInterface photoService,
-                           @Value("${aws.cloudfront.domain}") String cloudfrontDomain) {
+    public PhotoController(PhotoServiceInterface photoService) {
         this.photoService = photoService;
-        this.cloudfrontDomain = cloudfrontDomain;
-    }
-
-    private String cfRedirect(String path) {
-        return "redirect:https://" + cloudfrontDomain + path;
     }
 
     @GetMapping
@@ -88,7 +80,7 @@ public class PhotoController {
         }
 
         redirectAttributes.addFlashAttribute("successMessage", "Photo uploaded successfully!");
-        return cfRedirect("/");
+        return "redirect:/";
     }
 
     @GetMapping("/view/{id}")
@@ -124,13 +116,13 @@ public class PhotoController {
 
         photoService.updatePhoto(id, request);
         redirectAttributes.addFlashAttribute("successMessage", "Changes saved.");
-        return cfRedirect("/view/" + id);
+        return "redirect:/view/" + id;
     }
 
     @PostMapping("/delete/{id}")
     public String deletePhoto(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         photoService.deletePhoto(id);
         redirectAttributes.addFlashAttribute("successMessage", "Photo deleted.");
-        return cfRedirect("/");
+        return "redirect:/";
     }
 }

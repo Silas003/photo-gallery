@@ -1,137 +1,191 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Photo Gallery</title>
-    <link rel="stylesheet" th:href="@{/css/style.css(v=3)}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v=5)}">
 </head>
 <body>
 
+<!-- ── Navbar ── -->
 <nav class="navbar">
-    <a th:href="@{/}" class="navbar-brand">Photo Gallery</a>
+    <div class="navbar-inner">
+        <a th:href="@{/}" class="navbar-brand">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            Photon
+        </a>
+        <div class="navbar-actions">
+            <a th:href="@{/}" class="nav-link nav-link-active">Gallery</a>
+            <a th:href="@{/upload}" class="btn btn-primary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Upload
+            </a>
+        </div>
+    </div>
 </nav>
 
-<div class="toast-container" id="toastContainer"></div>
+<!-- ── Toast container ── -->
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-<!-- Gallery header strip -->
-<div class="gallery-header">
-    <div class="gallery-header-inner">
+<!-- ── Page body ── -->
+<main class="page">
+
+    <!-- Page title row -->
+    <div class="page-hero">
         <div>
-            <h1 class="gallery-header-title">My Gallery</h1>
-            <p class="gallery-header-count" th:if="${totalItems != null}"
-               th:text="${totalItems + ' photo' + (totalItems != 1 ? 's' : '')}"></p>
+            <h1 class="page-hero-title">My Gallery</h1>
+            <p class="page-hero-sub" th:if="${totalItems != null}"
+               th:text="${totalItems + ' photo' + (totalItems != 1 ? 's' : '') + ' in your collection'}"></p>
+            <p class="page-hero-sub" th:if="${totalItems == null}">Your personal photo collection</p>
         </div>
-        <a th:href="@{/upload}" class="gallery-header-upload">+ Upload Photo</a>
     </div>
-</div>
 
-<div class="page">
+    <!-- ── Toolbar ── -->
+    <div class="toolbar" role="search">
 
-    <!-- Toolbar: search · sort · view toggle -->
-    <div class="gallery-toolbar">
-
-        <form th:action="@{/}" method="get" class="gallery-search-form" id="searchForm">
+        <form th:action="@{/}" method="get" class="search-form" id="searchForm">
             <input type="hidden" name="sort" th:value="${sort}">
-            <div class="gallery-search-wrap">
-                <span class="gallery-search-icon">&#128269;</span>
+            <label for="searchInput" class="sr-only">Search photos</label>
+            <div class="search-wrap">
+                <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" name="keyword" id="searchInput"
                        th:value="${keyword}" placeholder="Search photos…" autocomplete="off">
+                <button type="submit" class="search-submit" aria-label="Search">Go</button>
             </div>
         </form>
 
-        <!-- Sort pills -->
-        <div class="pill-group">
-            <a th:href="@{/(keyword=${keyword}, sort='newest')}"
-               class="pill-btn" th:classappend="${sort == 'newest'} ? ' active'">Newest</a>
-            <a th:href="@{/(keyword=${keyword}, sort='oldest')}"
-               class="pill-btn" th:classappend="${sort == 'oldest'} ? ' active'">Oldest</a>
-            <a th:href="@{/(keyword=${keyword}, sort='alpha')}"
-               class="pill-btn" th:classappend="${sort == 'alpha'} ? ' active'">A–Z</a>
-        </div>
+        <div class="toolbar-right">
+            <!-- Sort -->
+            <div class="seg-control" role="group" aria-label="Sort order">
+                <a th:href="@{/(keyword=${keyword}, sort='newest')}"
+                   class="seg-btn" th:classappend="${sort == 'newest'} ? ' active'" aria-pressed="${sort == 'newest'}">Newest</a>
+                <a th:href="@{/(keyword=${keyword}, sort='oldest')}"
+                   class="seg-btn" th:classappend="${sort == 'oldest'} ? ' active'" aria-pressed="${sort == 'oldest'}">Oldest</a>
+                <a th:href="@{/(keyword=${keyword}, sort='alpha')}"
+                   class="seg-btn" th:classappend="${sort == 'alpha'} ? ' active'" aria-pressed="${sort == 'alpha'}">A–Z</a>
+            </div>
 
-        <!-- View toggle -->
-        <div class="pill-group">
-            <button type="button" class="pill-btn" id="btnGrid"
-                    onclick="setView('grid')" title="Grid view">&#9783;</button>
-            <button type="button" class="pill-btn" id="btnList"
-                    onclick="setView('list')" title="List view">&#8801;</button>
-        </div>
+            <!-- View toggle -->
+            <div class="seg-control" role="group" aria-label="View mode">
+                <button type="button" class="seg-btn" id="btnGrid"
+                        onclick="setView('grid')" title="Grid view" aria-label="Grid view">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                </button>
+                <button type="button" class="seg-btn" id="btnList"
+                        onclick="setView('list')" title="List view" aria-label="List view">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+            </div>
 
-        <a th:href="@{/(sort=${sort})}" class="btn btn-ghost btn-sm"
-           th:if="${keyword != null and !keyword.isEmpty()}">&#x2715; Clear</a>
+            <!-- Clear search -->
+            <a th:href="@{/(sort=${sort})}" class="btn-clear"
+               th:if="${keyword != null and !keyword.isEmpty()}" aria-label="Clear search">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Clear
+            </a>
+        </div>
 
     </div>
 
-    <!-- Empty state -->
+    <!-- ── Empty state ── -->
     <div th:if="${photos.empty}" class="empty-state">
-        <div class="empty-state-icon">&#128247;</div>
+        <div class="empty-state-icon" aria-hidden="true">
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
         <p class="empty-state-title"
            th:if="${keyword != null and !keyword.isEmpty()}"
            th:text="'No results for &quot;' + ${keyword} + '&quot;'"></p>
         <p class="empty-state-title"
            th:if="${keyword == null or keyword.isEmpty()}">No photos yet</p>
-        <p class="empty-state-text"
-           th:if="${keyword != null and !keyword.isEmpty()}">Try a different keyword or clear the search.</p>
-        <p class="empty-state-text"
-           th:if="${keyword == null or keyword.isEmpty()}">Upload your first photo to get started.</p>
-        <a th:href="@{/upload}" class="btn btn-primary"
-           th:if="${keyword == null or keyword.isEmpty()}">+ Upload Photo</a>
+        <p class="empty-state-body"
+           th:if="${keyword != null and !keyword.isEmpty()}">Try a different search term or clear the filter.</p>
+        <p class="empty-state-body"
+           th:if="${keyword == null or keyword.isEmpty()}">Upload your first photo to start building your gallery.</p>
+        <div class="empty-state-actions">
+            <a th:href="@{/(sort=${sort})}" class="btn btn-secondary btn-sm"
+               th:if="${keyword != null and !keyword.isEmpty()}">Clear search</a>
+            <a th:href="@{/upload}" class="btn btn-primary"
+               th:if="${keyword == null or keyword.isEmpty()}">Upload a photo</a>
+        </div>
     </div>
 
-    <!-- Photo grid -->
+    <!-- ── Photo grid ── -->
     <div class="photo-grid" id="photoGrid" th:if="${!photos.empty}">
-        <div th:each="photo : ${photos}" class="photo-card">
+        <article th:each="photo : ${photos}" class="photo-card">
 
-            <!-- Image (fills card via position:absolute) -->
-            <a th:href="@{/view/{id}(id=${photo.id})}" class="photo-card-thumb">
+            <a th:href="@{/view/{id}(id=${photo.id})}" class="photo-card-thumb" tabindex="-1" aria-hidden="true">
                 <img th:src="${photo.imageUrl}" th:alt="${photo.title}"
-                     class="photo-card-img" loading="lazy">
+                     class="photo-card-img" loading="lazy" decoding="async">
             </a>
 
-            <!-- Gradient overlay: title (links to view) + date + actions -->
             <div class="photo-card-overlay">
                 <a th:href="@{/view/{id}(id=${photo.id})}"
                    class="photo-card-title"
                    th:text="${photo.title}">Title</a>
-                <div class="photo-card-meta">
+                <div class="photo-card-footer">
                     <span class="photo-card-date"
                           th:text="${#temporals.format(photo.createdAt, 'MMM d, yyyy')}">Date</span>
                     <div class="photo-card-actions">
-                        <a th:href="@{/edit/{id}(id=${photo.id})}" class="card-action-btn">Edit</a>
-                        <button type="button" class="card-action-btn card-action-danger"
+                        <a th:href="@{/edit/{id}(id=${photo.id})}" class="card-btn" aria-label="Edit photo">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Edit
+                        </a>
+                        <button type="button" class="card-btn card-btn-danger"
                                 th:data-action="@{/delete/{id}(id=${photo.id})}"
                                 th:data-title="${photo.title}"
-                                onclick="openDeleteModal(this)">Delete</button>
+                                onclick="openDeleteModal(this)"
+                                aria-label="Delete photo">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            Delete
+                        </button>
                     </div>
                 </div>
             </div>
 
-        </div>
+        </article>
     </div>
 
-    <!-- Pagination -->
-    <div class="pagination" th:if="${totalPages > 1}">
+    <!-- ── Pagination ── -->
+    <nav class="pagination" th:if="${totalPages > 1}" aria-label="Page navigation">
         <a th:href="@{/(keyword=${keyword}, sort=${sort}, page=${currentPage - 1})}"
-           th:classappend="${currentPage == 0} ? 'pg-disabled'">&laquo;</a>
+           class="pg-btn" th:classappend="${currentPage == 0} ? ' pg-disabled'"
+           aria-label="Previous page" aria-disabled="${currentPage == 0}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
 
         <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
             <a th:href="@{/(keyword=${keyword}, sort=${sort}, page=${i})}"
-               th:text="${i + 1}"
-               th:classappend="${currentPage == i} ? 'pg-active'">1</a>
+               class="pg-btn" th:text="${i + 1}"
+               th:classappend="${currentPage == i} ? ' pg-active'"
+               th:aria-current="${currentPage == i} ? 'page' : null">1</a>
         </th:block>
 
         <a th:href="@{/(keyword=${keyword}, sort=${sort}, page=${currentPage + 1})}"
-           th:classappend="${currentPage == totalPages - 1} ? 'pg-disabled'">&raquo;</a>
-    </div>
+           class="pg-btn" th:classappend="${currentPage == totalPages - 1} ? ' pg-disabled'"
+           aria-label="Next page" aria-disabled="${currentPage == totalPages - 1}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+    </nav>
 
-</div>
+</main>
 
-<!-- Delete confirmation modal -->
-<div class="modal-overlay" id="deleteModal">
+<!-- ── Footer ── -->
+<footer class="footer">
+    <p>Photon &mdash; Your personal photo gallery</p>
+</footer>
+
+<!-- ── Delete modal ── -->
+<div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal">
-        <p class="modal-title">Delete Photo?</p>
-        <p class="modal-text" id="deleteModalText">This will permanently remove the photo and cannot be undone.</p>
+        <div class="modal-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </div>
+        <h2 class="modal-title" id="modalTitle">Delete Photo?</h2>
+        <p class="modal-body" id="deleteModalText">This will permanently remove the photo and cannot be undone.</p>
         <div class="modal-actions">
             <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
             <form id="deleteForm" method="post">
@@ -149,12 +203,14 @@
         var c = document.getElementById('toastContainer');
         var t = document.createElement('div');
         t.className = 'toast toast-' + (type || 'success');
-        t.textContent = msg;
+        t.innerHTML =
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' +
+            '<span>' + msg + '</span>';
         c.appendChild(t);
         setTimeout(function() {
             t.style.animation = 'toast-out .3s ease forwards';
             setTimeout(function() { t.remove(); }, 300);
-        }, 3000);
+        }, 3500);
     }
     if (successMessage) showToast(successMessage);
 
@@ -167,31 +223,36 @@
         if (!grid) return;
         var isList = (v === 'list');
         grid.classList.toggle('list-view', isList);
-        btnList.classList.toggle('active', isList);
-        btnGrid.classList.toggle('active', !isList);
+        if (btnList) btnList.classList.toggle('active', isList);
+        if (btnGrid) btnGrid.classList.toggle('active', !isList);
         try { localStorage.setItem('galleryView', v); } catch(e) {}
     }
 
-    // Restore saved preference
     try {
         var saved = localStorage.getItem('galleryView');
         setView(saved === 'list' ? 'list' : 'grid');
     } catch(e) { setView('grid'); }
 
-    /* ── Search: submit on Enter (hidden sort input keeps sort param) ── */
-    document.getElementById('searchInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('searchForm').submit(); }
-    });
+    /* ── Search: submit on Enter ── */
+    var searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('searchForm').submit(); }
+        });
+    }
 
     /* ── Delete modal ── */
     var overlay = document.getElementById('deleteModal');
     function openDeleteModal(btn) {
         document.getElementById('deleteModalText').textContent =
-            '"' + btn.dataset.title + '" will be permanently deleted. This cannot be undone.';
+            '"' + btn.dataset.title + '" will be permanently deleted and cannot be recovered.';
         document.getElementById('deleteForm').action = btn.dataset.action;
         overlay.classList.add('open');
+        overlay.querySelector('.btn-danger').focus();
     }
-    function closeDeleteModal() { overlay.classList.remove('open'); }
+    function closeDeleteModal() {
+        overlay.classList.remove('open');
+    }
     overlay.addEventListener('click', function(e) { if (e.target === overlay) closeDeleteModal(); });
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDeleteModal(); });
 </script>
