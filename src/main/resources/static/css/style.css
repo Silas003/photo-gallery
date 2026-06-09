@@ -1,9 +1,9 @@
 /* ── Design tokens ─────────────────────────────────── */
 :root {
-    --primary:        #6366f1;
-    --primary-dark:   #4f46e5;
-    --primary-light:  #eef2ff;
-    --primary-ring:   rgba(99,102,241,.2);
+    --primary:        #ef4444;
+    --primary-dark:   #dc2626;
+    --primary-light:  #fef2f2;
+    --primary-ring:   rgba(239,68,68,.2);
 
     --danger:         #ef4444;
     --danger-light:   #fef2f2;
